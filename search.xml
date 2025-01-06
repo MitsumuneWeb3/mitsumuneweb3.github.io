@@ -19,6 +19,39 @@
 ]]></content>
   </entry>
   <entry>
+    <title>hexo butterfly主题添加对随机图片api的支持</title>
+    <url>/2023/02/13/hexo_butterfly%E4%B8%BB%E9%A2%98%E6%B7%BB%E5%8A%A0%E5%AF%B9%E9%9A%8F%E6%9C%BA%E5%9B%BE%E7%89%87api%E7%9A%84%E6%94%AF%E6%8C%81/</url>
+    <content><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>在配置butterfly主题的时候发现一个问题，如果将主頁、文章封面的默认top_img配置为同一个随机图片api时会出现所有图片都相同的情况：</p>
+<p><img src="https://img.mitsumune.top/blog/hexo_butterfly%E4%B8%BB%E9%A2%98%E6%B7%BB%E5%8A%A0%E5%AF%B9%E9%9A%8F%E6%9C%BA%E5%9B%BE%E7%89%87api%E7%9A%84%E6%94%AF%E6%8C%81/1.jpg" alt="1"></p>
+<h3 id="如何解决？"><a href="#如何解决？" class="headerlink" title="如何解决？"></a>如何解决？</h3><p>最开始我的解决方案是配置多个随机图片api：</p>
+<p><img src="https://img.mitsumune.top/blog/hexo_butterfly%E4%B8%BB%E9%A2%98%E6%B7%BB%E5%8A%A0%E5%AF%B9%E9%9A%8F%E6%9C%BA%E5%9B%BE%E7%89%87api%E7%9A%84%E6%94%AF%E6%8C%81/2.jpg" alt="2"></p>
+<p>用了一段时间后对随机的图片不是很满意，<del>为了符合自己的XP</del>就自己弄了个随机图片api。然后就又回到了最开始的问题，刚好之前在浏览Issues的时候发现有人提交了个<a href="https://github.com/jerryc127/hexo-theme-butterfly/pull/1054">PR</a>可惜并未通过。详细配置方法如下：</p>
+<ol>
+<li><p>打开<code>hexo根目录\themes\butterfly\scripts</code>新建一个random_img.js文件。<img src="https://img.mitsumune.top/blog/hexo_butterfly%E4%B8%BB%E9%A2%98%E6%B7%BB%E5%8A%A0%E5%AF%B9%E9%9A%8F%E6%9C%BA%E5%9B%BE%E7%89%87api%E7%9A%84%E6%94%AF%E6%8C%81/3.jpg" alt="3"></p>
+</li>
+<li><p>将以下代码复制进random_img.js文件并保存。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">/**</span><br><span class="line"> * Butterfly</span><br><span class="line"> * ramdom cover</span><br><span class="line"> */</span><br><span class="line"></span><br><span class="line">&#x27;use strict&#x27;</span><br><span class="line"></span><br><span class="line">hexo.extend.filter.register(&#x27;before_post_render&#x27;, function (data) &#123;</span><br><span class="line">  const &#123; config &#125; = this</span><br><span class="line">  if (config.post_asset_folder) &#123;</span><br><span class="line">    const imgTestReg = /\.(png|jpe?g|gif|svg|webp)(\?.*)?$/</span><br><span class="line">    const topImg = data.top_img</span><br><span class="line">    const cover = data.cover</span><br><span class="line">    if (topImg &amp;&amp; topImg.indexOf(&#x27;/&#x27;) === -1 &amp;&amp; imgTestReg.test(topImg)) data.top_img = data.path + topImg</span><br><span class="line">    if (cover &amp;&amp; cover.indexOf(&#x27;/&#x27;) === -1) data.cover = data.path + cover</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  if (data.cover === false) &#123;</span><br><span class="line">    data.randomcover = randomCover()</span><br><span class="line">    return data</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  data.cover = data.cover || randomCover()</span><br><span class="line">  return data</span><br><span class="line">&#125;,0)</span><br><span class="line"></span><br><span class="line">function randomCover () &#123;</span><br><span class="line">  const theme = hexo.theme.config</span><br><span class="line">  let cover</span><br><span class="line">  let num</span><br><span class="line"></span><br><span class="line">  if (theme.cover &amp;&amp; theme.cover.default_cover) &#123;</span><br><span class="line">    if (!Array.isArray(theme.cover.default_cover)) &#123;</span><br><span class="line">      cover = theme.cover.default_cover</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">      num = Math.floor(Math.random() * theme.cover.default_cover.length)</span><br><span class="line">      cover = theme.cover.default_cover[num]</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; else &#123;</span><br><span class="line">    cover = theme.default_top_img || &#x27;data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7&#x27;</span><br><span class="line">  &#125;</span><br><span class="line">  if(theme.cover.suffix)&#123;</span><br><span class="line">    if(theme.cover.suffix == 1)</span><br><span class="line">      cover = cover + (&quot;?&quot; + Math.ceil(Math.random()*10000))</span><br><span class="line">    else if(theme.cover.suffix == 2)</span><br><span class="line">      cover = cover + (&quot;&amp;&quot; + Math.ceil(Math.random()*10000))</span><br><span class="line">  &#125;</span><br><span class="line">  return cover</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>打开butterfly主题配置文件：在cover:插入<code>suffix: 1</code>并保存（目的是在链接后面加入后缀<code>?spm=&#123;随机数&#125;</code> 0是不使用后缀、1是?加随机数；2是&amp;加随机数）<img src="https://img.mitsumune.top/blog/hexo_butterfly%E4%B8%BB%E9%A2%98%E6%B7%BB%E5%8A%A0%E5%AF%B9%E9%9A%8F%E6%9C%BA%E5%9B%BE%E7%89%87api%E7%9A%84%E6%94%AF%E6%8C%81/4.jpg" alt="4"></p>
+</li>
+<li><p>最后分别运行以下命令查看是否生效：</p>
+<p><code>hexo cl</code></p>
+<p><code>hexo g</code></p>
+<p><code>hexo s</code></p>
+</li>
+</ol>
+<p><img src="https://img.mitsumune.top/blog/hexo_butterfly%E4%B8%BB%E9%A2%98%E6%B7%BB%E5%8A%A0%E5%AF%B9%E9%9A%8F%E6%9C%BA%E5%9B%BE%E7%89%87api%E7%9A%84%E6%94%AF%E6%8C%81/5.jpg" alt="5"></p>
+]]></content>
+      <categories>
+        <category>2023年</category>
+      </categories>
+      <tags>
+        <tag>教程</tag>
+        <tag>hexo</tag>
+        <tag>butterfly</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>《日本印象-夏》2.0暑假直播路线</title>
     <url>/2022/05/19/%E3%80%8A%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1-%E5%A4%8F%E3%80%8B2.0%E6%9A%91%E5%81%87%E7%9B%B4%E6%92%AD%E8%B7%AF%E7%BA%BF/</url>
     <content><![CDATA[<blockquote>
@@ -139,79 +172,9 @@
       </tags>
   </entry>
   <entry>
-    <title>hexo butterfly主题添加对随机图片api的支持</title>
-    <url>/2023/02/13/hexo_butterfly%E4%B8%BB%E9%A2%98%E6%B7%BB%E5%8A%A0%E5%AF%B9%E9%9A%8F%E6%9C%BA%E5%9B%BE%E7%89%87api%E7%9A%84%E6%94%AF%E6%8C%81/</url>
-    <content><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>在配置butterfly主题的时候发现一个问题，如果将主頁、文章封面的默认top_img配置为同一个随机图片api时会出现所有图片都相同的情况：</p>
-<p><img src="https://img.mitsumune.top/blog/hexo_butterfly%E4%B8%BB%E9%A2%98%E6%B7%BB%E5%8A%A0%E5%AF%B9%E9%9A%8F%E6%9C%BA%E5%9B%BE%E7%89%87api%E7%9A%84%E6%94%AF%E6%8C%81/1.jpg" alt="1"></p>
-<h3 id="如何解决？"><a href="#如何解决？" class="headerlink" title="如何解决？"></a>如何解决？</h3><p>最开始我的解决方案是配置多个随机图片api：</p>
-<p><img src="https://img.mitsumune.top/blog/hexo_butterfly%E4%B8%BB%E9%A2%98%E6%B7%BB%E5%8A%A0%E5%AF%B9%E9%9A%8F%E6%9C%BA%E5%9B%BE%E7%89%87api%E7%9A%84%E6%94%AF%E6%8C%81/2.jpg" alt="2"></p>
-<p>用了一段时间后对随机的图片不是很满意，<del>为了符合自己的XP</del>就自己弄了个随机图片api。然后就又回到了最开始的问题，刚好之前在浏览Issues的时候发现有人提交了个<a href="https://github.com/jerryc127/hexo-theme-butterfly/pull/1054">PR</a>可惜并未通过。详细配置方法如下：</p>
-<ol>
-<li><p>打开<code>hexo根目录\themes\butterfly\scripts</code>新建一个random_img.js文件。<img src="https://img.mitsumune.top/blog/hexo_butterfly%E4%B8%BB%E9%A2%98%E6%B7%BB%E5%8A%A0%E5%AF%B9%E9%9A%8F%E6%9C%BA%E5%9B%BE%E7%89%87api%E7%9A%84%E6%94%AF%E6%8C%81/3.jpg" alt="3"></p>
-</li>
-<li><p>将以下代码复制进random_img.js文件并保存。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">/**</span><br><span class="line"> * Butterfly</span><br><span class="line"> * ramdom cover</span><br><span class="line"> */</span><br><span class="line"></span><br><span class="line">&#x27;use strict&#x27;</span><br><span class="line"></span><br><span class="line">hexo.extend.filter.register(&#x27;before_post_render&#x27;, function (data) &#123;</span><br><span class="line">  const &#123; config &#125; = this</span><br><span class="line">  if (config.post_asset_folder) &#123;</span><br><span class="line">    const imgTestReg = /\.(png|jpe?g|gif|svg|webp)(\?.*)?$/</span><br><span class="line">    const topImg = data.top_img</span><br><span class="line">    const cover = data.cover</span><br><span class="line">    if (topImg &amp;&amp; topImg.indexOf(&#x27;/&#x27;) === -1 &amp;&amp; imgTestReg.test(topImg)) data.top_img = data.path + topImg</span><br><span class="line">    if (cover &amp;&amp; cover.indexOf(&#x27;/&#x27;) === -1) data.cover = data.path + cover</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  if (data.cover === false) &#123;</span><br><span class="line">    data.randomcover = randomCover()</span><br><span class="line">    return data</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  data.cover = data.cover || randomCover()</span><br><span class="line">  return data</span><br><span class="line">&#125;,0)</span><br><span class="line"></span><br><span class="line">function randomCover () &#123;</span><br><span class="line">  const theme = hexo.theme.config</span><br><span class="line">  let cover</span><br><span class="line">  let num</span><br><span class="line"></span><br><span class="line">  if (theme.cover &amp;&amp; theme.cover.default_cover) &#123;</span><br><span class="line">    if (!Array.isArray(theme.cover.default_cover)) &#123;</span><br><span class="line">      cover = theme.cover.default_cover</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">      num = Math.floor(Math.random() * theme.cover.default_cover.length)</span><br><span class="line">      cover = theme.cover.default_cover[num]</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; else &#123;</span><br><span class="line">    cover = theme.default_top_img || &#x27;data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7&#x27;</span><br><span class="line">  &#125;</span><br><span class="line">  if(theme.cover.suffix)&#123;</span><br><span class="line">    if(theme.cover.suffix == 1)</span><br><span class="line">      cover = cover + (&quot;?&quot; + Math.ceil(Math.random()*10000))</span><br><span class="line">    else if(theme.cover.suffix == 2)</span><br><span class="line">      cover = cover + (&quot;&amp;&quot; + Math.ceil(Math.random()*10000))</span><br><span class="line">  &#125;</span><br><span class="line">  return cover</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>打开butterfly主题配置文件：在cover:插入<code>suffix: 1</code>并保存（目的是在链接后面加入后缀<code>?spm=&#123;随机数&#125;</code> 0是不使用后缀、1是?加随机数；2是&amp;加随机数）<img src="https://img.mitsumune.top/blog/hexo_butterfly%E4%B8%BB%E9%A2%98%E6%B7%BB%E5%8A%A0%E5%AF%B9%E9%9A%8F%E6%9C%BA%E5%9B%BE%E7%89%87api%E7%9A%84%E6%94%AF%E6%8C%81/4.jpg" alt="4"></p>
-</li>
-<li><p>最后分别运行以下命令查看是否生效：</p>
-<p><code>hexo cl</code></p>
-<p><code>hexo g</code></p>
-<p><code>hexo s</code></p>
-</li>
-</ol>
-<p><img src="https://img.mitsumune.top/blog/hexo_butterfly%E4%B8%BB%E9%A2%98%E6%B7%BB%E5%8A%A0%E5%AF%B9%E9%9A%8F%E6%9C%BA%E5%9B%BE%E7%89%87api%E7%9A%84%E6%94%AF%E6%8C%81/5.jpg" alt="5"></p>
-]]></content>
-      <categories>
-        <category>2023年</category>
-      </categories>
-      <tags>
-        <tag>教程</tag>
-        <tag>hexo</tag>
-        <tag>butterfly</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>使用ACME的DNS API模式申请SLL证书</title>
-    <url>/2022/05/23/%E4%BD%BF%E7%94%A8ACME%E7%94%B3%E8%AF%B7SSL%E8%AF%81%E4%B9%A6/</url>
-    <content><![CDATA[<blockquote>
-<p>更多使用方法请阅读<a href="https://github.com/acmesh-official/acme.sh/wiki/">官方Wiki</a></p>
-</blockquote>
-<h2 id="安装-ACME"><a href="#安装-ACME" class="headerlink" title="安装 ACME"></a>安装 <a href="https://github.com/acmesh-official/acme.sh">ACME</a></h2><p><code>curl https://get.acme.sh | sh</code></p>
-<p><strong>acme.sh默认CA为<a href="https://zerossl.com/">ZeroSSL</a>对老设备兼容性更好，使用ACME申请可以突破免费版3张证书的限制。如果申请失败可以尝试将CA变更为 letsencrypt（注：申请命令与ZeroSSL不一致）</strong></p>
-<h2 id="使用DNS-API模式申请ZeroSSL泛域名SSL证书"><a href="#使用DNS-API模式申请ZeroSSL泛域名SSL证书" class="headerlink" title="使用DNS API模式申请ZeroSSL泛域名SSL证书"></a>使用DNS API模式申请ZeroSSL泛域名SSL证书</h2><p><strong>在申请之前先注册<a href="https://zerossl.com/">ZeroSSL</a></strong></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">acme.sh --register-account -m 你注册ZeroSSL的邮箱 --server zerossl</span><br><span class="line">export CF_Key=&quot;自行获取&quot;</span><br><span class="line">export CF_Email=&quot;你注册cloudflare的邮箱&quot;</span><br><span class="line">acme.sh --issue --dns dns_cf -d 你的域名 -d *.你的域名（注意要加*号）</span><br><span class="line">mkdir /root/cert</span><br><span class="line">acme.sh --install-cert -d 你的域名 --key-file /root/cert/private.key --fullchain-file /root/cert/cert.crt</span><br><span class="line">acme.sh --upgrade --auto-upgrade</span><br><span class="line">chmod -R 755 /root/cert</span><br><span class="line"></span><br><span class="line">命令解释：</span><br><span class="line">--register-account：注册账户密钥</span><br><span class="line">--email或-m：邮箱</span><br><span class="line">--server：ACME目录资源URI</span><br><span class="line">--issue：颁发证书</span><br><span class="line">--dns dns_CF：使用Cloudflare的API Key</span><br><span class="line">--install-cert：安装证书</span><br><span class="line">--key-file：私钥文件安装路径</span><br><span class="line">--fullchain-file：证书链文件安装路径</span><br><span class="line">--upgrade：检查更新</span><br><span class="line">--auto-upgrade：自动升级</span><br></pre></td></tr></table></figure>
-
-<p><strong>export CF_Key在这里获取：</strong></p>
-<p><img src="https://img.mitsumune.top/blog/%E3%80%90%E6%95%99%E7%A8%8B%E3%80%91%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8ACME%E7%94%B3%E8%AF%B7SLL%E8%AF%81%E4%B9%A6/1.png" alt="1"></p>
-<p><strong>证书公钥文件路径：</strong></p>
-<p><code>/root/cert/cert.crt</code></p>
-<p><strong>证书密钥文件路径：</strong></p>
-<p><code>/root/cert/private.key</code></p>
-<h2 id="查看证书"><a href="#查看证书" class="headerlink" title="查看证书"></a>查看证书</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">acme.sh --list</span><br><span class="line"></span><br><span class="line">命令解释：</span><br><span class="line">--list：列出所有证书</span><br></pre></td></tr></table></figure>
-
-<h2 id="更新证书"><a href="#更新证书" class="headerlink" title="更新证书"></a>更新证书</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">acme.sh -r -d 你的域名 --force</span><br><span class="line"></span><br><span class="line">命令解释：</span><br><span class="line">-r：更新证书</span><br><span class="line">-d：指定域名</span><br><span class="line">--force：强制更新</span><br></pre></td></tr></table></figure>
-
-<h2 id="吊销证书"><a href="#吊销证书" class="headerlink" title="吊销证书"></a>吊销证书</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">acme.sh --revoke -d 你的域名</span><br><span class="line"></span><br><span class="line">命令解释：</span><br><span class="line">--revoke：吊销证书</span><br><span class="line">-d ：指定域名</span><br></pre></td></tr></table></figure>
-
-<h2 id="删除证书"><a href="#删除证书" class="headerlink" title="删除证书"></a>删除证书</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">acme.sh --remove -d 你的域名</span><br><span class="line"></span><br><span class="line">命令解释：</span><br><span class="line">--remove：移除证书</span><br><span class="line">-d ：指定域名</span><br></pre></td></tr></table></figure>
-
-]]></content>
-      <categories>
-        <category>2022年</category>
-      </categories>
-      <tags>
-        <tag>教程</tag>
-        <tag>SSL证书</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>使用 ESP8266模块 与双路继电器结合 Blinker 和小爱同学实现远程控制电脑开关与重启</title>
-    <url>/2024/10/11/%E4%BD%BF%E7%94%A8%20ESP8266%20%E6%A8%A1%E5%9D%97%E4%B8%8E%E5%8F%8C%E8%B7%AF%E7%BB%A7%E7%94%B5%E5%99%A8%E7%BB%93%E5%90%88%20Blinker%20%E5%92%8C%E5%B0%8F%E7%88%B1%E5%90%8C%E5%AD%A6%E5%AE%9E%E7%8E%B0%E8%BF%9C%E7%A8%8B%E6%8E%A7%E5%88%B6%E7%94%B5%E8%84%91%E5%BC%80%E5%85%B3%E4%B8%8E%E9%87%8D%E5%90%AF%2011b2c6543dab80139959e7cec569ac49/</url>
-    <content><![CDATA[<blockquote>
-<p>在现代生活中，能够远程控制家中的设备已经变得越来越便捷和普及。对于需要远程管理电脑的用户来说，能够通过智能设备实现远程开关机和重启电脑，不仅提高了工作效率，也增加了使用的便捷性。本文将详细介绍如何使用 ESP8266 模块配合双路继电器，并借助点灯科技的 Blinker 服务与小爱同学实现远程控制电脑的开关与重启功能。</p>
-</blockquote>
-<h2 id="所需材料"><a href="#所需材料" class="headerlink" title="所需材料"></a>所需材料</h2><p>在开始之前，请准备以下材料：</p>
+    <url>/2024/10/11/%E4%BD%BF%E7%94%A8%20ESP8266%20%E6%A8%A1%E5%9D%97%E4%B8%8E%E5%8F%8C%E8%B7%AF%E7%BB%A7%E7%94%B5%E5%99%A8%E7%BB%93%E5%90%88%20Blinker%20%E5%92%8C%E5%B0%8F%E7%88%B1%E5%90%8C%E5%AD%A6%E5%AE%9E%E7%8E%B0%E8%BF%9C%E7%A8%8B%E6%8E%A7%E5%88%B6%E7%94%B5%E8%84%91%E5%BC%80%E5%85%B3%E4%B8%8E%E9%87%8D%E5%90%AF/</url>
+    <content><![CDATA[<h2 id="所需材料"><a href="#所需材料" class="headerlink" title="所需材料"></a>所需材料</h2><p>在开始之前，请准备以下材料：</p>
 <ul>
 <li><strong>ESP8266 模块</strong></li>
 <li><strong>高电平双路继电器模块</strong><ul>
@@ -409,6 +372,40 @@
       </tags>
   </entry>
   <entry>
+    <title>使用ACME的DNS API模式申请SLL证书</title>
+    <url>/2022/05/23/%E4%BD%BF%E7%94%A8ACME%E7%94%B3%E8%AF%B7SSL%E8%AF%81%E4%B9%A6/</url>
+    <content><![CDATA[<blockquote>
+<p>更多使用方法请阅读<a href="https://github.com/acmesh-official/acme.sh/wiki/">官方Wiki</a></p>
+</blockquote>
+<h2 id="安装-ACME"><a href="#安装-ACME" class="headerlink" title="安装 ACME"></a>安装 <a href="https://github.com/acmesh-official/acme.sh">ACME</a></h2><p><code>curl https://get.acme.sh | sh</code></p>
+<p><strong>acme.sh默认CA为<a href="https://zerossl.com/">ZeroSSL</a>对老设备兼容性更好，使用ACME申请可以突破免费版3张证书的限制。如果申请失败可以尝试将CA变更为 letsencrypt（注：申请命令与ZeroSSL不一致）</strong></p>
+<h2 id="使用DNS-API模式申请ZeroSSL泛域名SSL证书"><a href="#使用DNS-API模式申请ZeroSSL泛域名SSL证书" class="headerlink" title="使用DNS API模式申请ZeroSSL泛域名SSL证书"></a>使用DNS API模式申请ZeroSSL泛域名SSL证书</h2><p><strong>在申请之前先注册<a href="https://zerossl.com/">ZeroSSL</a></strong></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">acme.sh --register-account -m 你注册ZeroSSL的邮箱 --server zerossl</span><br><span class="line">export CF_Key=&quot;自行获取&quot;</span><br><span class="line">export CF_Email=&quot;你注册cloudflare的邮箱&quot;</span><br><span class="line">acme.sh --issue --dns dns_cf -d 你的域名 -d *.你的域名（注意要加*号）</span><br><span class="line">mkdir /root/cert</span><br><span class="line">acme.sh --install-cert -d 你的域名 --key-file /root/cert/private.key --fullchain-file /root/cert/cert.crt</span><br><span class="line">acme.sh --upgrade --auto-upgrade</span><br><span class="line">chmod -R 755 /root/cert</span><br><span class="line"></span><br><span class="line">命令解释：</span><br><span class="line">--register-account：注册账户密钥</span><br><span class="line">--email或-m：邮箱</span><br><span class="line">--server：ACME目录资源URI</span><br><span class="line">--issue：颁发证书</span><br><span class="line">--dns dns_CF：使用Cloudflare的API Key</span><br><span class="line">--install-cert：安装证书</span><br><span class="line">--key-file：私钥文件安装路径</span><br><span class="line">--fullchain-file：证书链文件安装路径</span><br><span class="line">--upgrade：检查更新</span><br><span class="line">--auto-upgrade：自动升级</span><br></pre></td></tr></table></figure>
+
+<p><strong>export CF_Key在这里获取：</strong></p>
+<p><img src="https://img.mitsumune.top/blog/%E3%80%90%E6%95%99%E7%A8%8B%E3%80%91%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8ACME%E7%94%B3%E8%AF%B7SLL%E8%AF%81%E4%B9%A6/1.png" alt="1"></p>
+<p><strong>证书公钥文件路径：</strong></p>
+<p><code>/root/cert/cert.crt</code></p>
+<p><strong>证书密钥文件路径：</strong></p>
+<p><code>/root/cert/private.key</code></p>
+<h2 id="查看证书"><a href="#查看证书" class="headerlink" title="查看证书"></a>查看证书</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">acme.sh --list</span><br><span class="line"></span><br><span class="line">命令解释：</span><br><span class="line">--list：列出所有证书</span><br></pre></td></tr></table></figure>
+
+<h2 id="更新证书"><a href="#更新证书" class="headerlink" title="更新证书"></a>更新证书</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">acme.sh -r -d 你的域名 --force</span><br><span class="line"></span><br><span class="line">命令解释：</span><br><span class="line">-r：更新证书</span><br><span class="line">-d：指定域名</span><br><span class="line">--force：强制更新</span><br></pre></td></tr></table></figure>
+
+<h2 id="吊销证书"><a href="#吊销证书" class="headerlink" title="吊销证书"></a>吊销证书</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">acme.sh --revoke -d 你的域名</span><br><span class="line"></span><br><span class="line">命令解释：</span><br><span class="line">--revoke：吊销证书</span><br><span class="line">-d ：指定域名</span><br></pre></td></tr></table></figure>
+
+<h2 id="删除证书"><a href="#删除证书" class="headerlink" title="删除证书"></a>删除证书</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">acme.sh --remove -d 你的域名</span><br><span class="line"></span><br><span class="line">命令解释：</span><br><span class="line">--remove：移除证书</span><br><span class="line">-d ：指定域名</span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>2022年</category>
+      </categories>
+      <tags>
+        <tag>教程</tag>
+        <tag>SSL证书</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>小米9使用ADB刷入PixelExperience</title>
     <url>/2022/06/06/%E5%B0%8F%E7%B1%B39%E4%BD%BF%E7%94%A8ADB%E5%88%B7%E5%85%A5pixelexperience/</url>
     <content><![CDATA[<blockquote>
@@ -516,6 +513,11 @@
       </tags>
   </entry>
   <entry>
+    <title>分类</title>
+    <url>/categories/index.html</url>
+    <content><![CDATA[]]></content>
+  </entry>
+  <entry>
     <title>图库</title>
     <url>/Gallery/index.html</url>
     <content><![CDATA[<div class="gallery-group-main">
@@ -541,13 +543,8 @@
 ]]></content>
   </entry>
   <entry>
-    <title>分类</title>
-    <url>/categories/index.html</url>
-    <content><![CDATA[]]></content>
-  </entry>
-  <entry>
-    <title>bangumis</title>
-    <url>/bangumis/index.html</url>
+    <title>友链</title>
+    <url>/link/index.html</url>
     <content><![CDATA[]]></content>
   </entry>
   <entry>
@@ -557,13 +554,21 @@
 ]]></content>
   </entry>
   <entry>
-    <title>友链</title>
-    <url>/link/index.html</url>
+    <title>标签</title>
+    <url>/tags/index.html</url>
     <content><![CDATA[]]></content>
   </entry>
   <entry>
-    <title>标签</title>
-    <url>/tags/index.html</url>
+    <title>音乐</title>
+    <url>/music/index.html</url>
+    <content><![CDATA[
+    <div id="aplayer-YQrprmjO" class="aplayer aplayer-tag-marker meting-tag-marker"
+         data-id="539246065" data-server="netease" data-type="playlist" data-mode="circulation" data-autoplay="true" data-mutex="false" data-listmaxheight="535px" data-preload="none" data-theme="#ffb8c8" data-order="random" data-volume="1"
+    ></div>]]></content>
+  </entry>
+  <entry>
+    <title>bangumis</title>
+    <url>/bangumis/index.html</url>
     <content><![CDATA[]]></content>
   </entry>
   <entry>
@@ -591,14 +596,6 @@
 ]]></content>
   </entry>
   <entry>
-    <title>音乐</title>
-    <url>/music/index.html</url>
-    <content><![CDATA[
-    <div id="aplayer-KWMIhJQc" class="aplayer aplayer-tag-marker meting-tag-marker"
-         data-id="539246065" data-server="netease" data-type="playlist" data-mode="circulation" data-autoplay="true" data-mutex="false" data-listmaxheight="535px" data-preload="none" data-theme="#ffb8c8" data-order="random" data-volume="1"
-    ></div>]]></content>
-  </entry>
-  <entry>
     <title>四总の视频封面</title>
     <url>/Gallery/426_video_img/index.html</url>
     <content><![CDATA[<blockquote>
@@ -608,16 +605,6 @@
       <div class="gallery-items">[{"url":"https://img.mitsumune.top/blog/426_video/拥有麒麟臂的426.jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/一脸高潮状的426.jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/大雪中的秋叶原.jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/东京印象-春.jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/日本印象-夏.jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/记录我来日本的这一年.jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/《日本印象-夏》花絮_富士山游记（上）.jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/日本印象-秋.jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/节操满满的秋叶原之旅.jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/好想和你一起、欣赏这烂漫的樱花.jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/日本印象-冬.jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/赏樱之旅花絮-青春18车票攻略Day1你管这叫旅行？.jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/時間与記憶-不属于我的日常.jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/【京都赏樱之旅】Day1下-祇園-先斗町.jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/【器材】426教你如何用胶片拍电影.jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/Charlotte-夏洛特-圣地巡礼-皿倉山展望台.jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/京都赏樱之旅-DAY2-岚山-哲学之道.jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/SONY-a7S-II上手测试—新宿夜景.jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/【独立制作短片】426日本篇Project-Part.1(2016).jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/长崎漫步.jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/《你的名字》圣地巡礼-摄影攻略.jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/我们的2016.jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/直播登富士山全程是一种怎样的体验？.jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/重游阿苏，人是物非.jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/触摸日本的退役电车-九州铁道纪念馆.jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/珍藏在记忆中的阿苏.jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/接近喵帕斯的田野-JR日本最南端车站.jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/终于开始了，北海道自驾游.jpg","alt":""},{"url":"https://img.mitsumune.top/blog/426_video/这应该是一年中最有童话气息的小樽？.jpg","alt":""}]</div>
     </div>
 ]]></content>
-  </entry>
-  <entry>
-    <title>随机图片api</title>
-    <url>/Gallery/imgapi/index.html</url>
-    <content><![CDATA[<blockquote>
-<p>有喜欢我随机api里的图片的小伙伴可以自取~</p>
-</blockquote>
-<div class="gallery-container" data-type="data" data-button="">
-      <div class="gallery-items">[{"url":"https://img.mitsumune.top/api/img/1.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/2.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/3.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/4.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/5.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/6.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/7.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/8.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/9.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/10.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/11.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/12.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/13.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/14.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/15.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/16.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/17.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/18.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/19.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/20.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/21.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/22.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/23.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/24.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/25.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/26.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/27.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/28.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/29.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/30.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/31.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/32.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/33.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/34.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/35.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/36.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/37.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/38.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/39.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/40.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/41.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/42.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/43.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/44.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/45.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/46.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/47.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/48.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/49.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/50.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/51.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/52.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/53.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/54.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/55.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/56.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/57.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/58.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/59.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/60.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/61.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/62.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/63.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/64.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/65.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/66.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/67.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/68.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/69.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/70.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/71.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/72.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/73.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/74.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/75.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/76.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/77.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/78.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/79.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/80.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/81.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/82.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/83.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/84.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/85.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/86.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/87.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/88.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/89.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/90.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/91.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/92.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/93.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/94.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/95.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/96.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/97.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/98.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/99.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/100.jpg","alt":""}]</div>
-    </div>]]></content>
   </entry>
   <entry>
     <title>Charlotte-夏洛特-圣地巡礼-皿倉山展望台</title>
@@ -633,17 +620,14 @@
 ]]></content>
   </entry>
   <entry>
-    <title>《你的名字》圣地巡礼 摄影攻略</title>
-    <url>/video/426_video/%E3%80%8A%E4%BD%A0%E7%9A%84%E5%90%8D%E5%AD%97%E3%80%8B%E5%9C%A3%E5%9C%B0%E5%B7%A1%E7%A4%BC-%E6%91%84%E5%BD%B1%E6%94%BB%E7%95%A5/index.html</url>
-    <content><![CDATA[<div id="dplayer5" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer5"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%5BPC426%5D%E3%80%8A%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%8B%E5%9C%A3%E5%9C%B0%E5%B7%A1%E7%A4%BC%20%E6%91%84%E5%BD%B1%E6%94%BB%E7%95%A5.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=7730278&cid=12671909"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
-
-<blockquote>
-<p>投稿日期：2016-12-28 03:44:33<br>简介：虽然因为季节不对，导致太阳角度、气候都会有一些差异，不过因为最近询问我关于是否会做《你的名字》圣地巡礼相关内容的用户太多了。。。我拗不过你们。。。 所以就把我踩点时随拍的素材，做成一期《你的名字》圣地巡礼的摄影攻略。 虽然说是攻略，不过我并不想只是和大家讨论很技术向的内容，所以这一次尝试做成了一种静静欣赏风景、感受自然的光影变化，最后捕捉需要的那几秒钟镜头的感觉。 当然，这次尝试做了一个完全没有原作BGM和原作截图对比的圣地巡礼，不知道。。可不可行？</p>
+    <title>随机图片api</title>
+    <url>/Gallery/imgapi/index.html</url>
+    <content><![CDATA[<blockquote>
+<p>有喜欢我随机api里的图片的小伙伴可以自取~</p>
 </blockquote>
-<a class="btn-beautify pink larger" href="https://www.bilibili.com/video/BV1ks411a7w2/" title="bilibili观看"><i class="fab fa-bilibili"></i><span>bilibili观看</span></a>
-
-<a class="btn-beautify blue larger" href="https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%5BPC426%5D%E3%80%8A%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%8B%E5%9C%A3%E5%9C%B0%E5%B7%A1%E7%A4%BC%20%E6%91%84%E5%BD%B1%E6%94%BB%E7%95%A5.mp4" title="下载"><i class="fas fa-download"></i><span>下载</span></a>
-]]></content>
+<div class="gallery-container" data-type="data" data-button="">
+      <div class="gallery-items">[{"url":"https://img.mitsumune.top/api/img/1.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/2.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/3.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/4.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/5.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/6.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/7.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/8.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/9.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/10.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/11.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/12.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/13.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/14.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/15.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/16.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/17.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/18.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/19.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/20.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/21.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/22.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/23.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/24.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/25.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/26.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/27.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/28.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/29.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/30.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/31.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/32.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/33.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/34.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/35.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/36.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/37.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/38.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/39.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/40.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/41.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/42.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/43.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/44.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/45.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/46.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/47.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/48.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/49.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/50.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/51.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/52.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/53.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/54.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/55.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/56.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/57.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/58.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/59.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/60.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/61.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/62.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/63.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/64.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/65.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/66.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/67.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/68.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/69.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/70.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/71.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/72.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/73.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/74.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/75.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/76.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/77.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/78.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/79.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/80.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/81.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/82.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/83.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/84.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/85.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/86.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/87.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/88.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/89.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/90.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/91.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/92.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/93.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/94.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/95.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/96.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/97.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/98.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/99.jpg","alt":""},{"url":"https://img.mitsumune.top/api/img/100.jpg","alt":""}]</div>
+    </div>]]></content>
   </entry>
   <entry>
     <title>四总の视频</title>
@@ -894,7 +878,7 @@
   <entry>
     <title>SONY a7S II上手测试—新宿夜景</title>
     <url>/video/426_video/SONY-a7S-II%E4%B8%8A%E6%89%8B%E6%B5%8B%E8%AF%95%E2%80%94%E6%96%B0%E5%AE%BF%E5%A4%9C%E6%99%AF/index.html</url>
-    <content><![CDATA[<div id="dplayer6" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer6"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/A7sII%E4%B8%8A%E6%89%8B%E6%B5%8B%E8%AF%95.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=6415238&cid=10428999"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
+    <content><![CDATA[<div id="dplayer5" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer5"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/A7sII%E4%B8%8A%E6%89%8B%E6%B5%8B%E8%AF%95.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=6415238&cid=10428999"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
 
 <blockquote>
 <p>投稿日期：2016-09-25 18:32:31<br>简介：从夏洛特圣地巡礼开始（<a href="https://www.bilibili.com/video/av2777476/?spm_id_from=333.788.video.desc.click">av2777476</a>），就一直被相机的高感上不去困扰。 于是攒了1年多的钱终于把a7S II带回了家，新机器必须要尽快熟悉，所以昨天开始去熟悉这台机器的特性，这个过程会把素材和感想和大家分享。 这一次附上了20M码率4k的下载版本给大家提供参考： <a href="http://pan.baidu.com/s/1bAstJK">http://pan.baidu.com/s/1bAstJK</a> 密码：ouen</p>
@@ -906,22 +890,22 @@
 ]]></content>
   </entry>
   <entry>
-    <title>《日本印象-夏》花絮 富士山游记（下）</title>
-    <url>/video/426_video/%E3%80%8A%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1-%E5%A4%8F%E3%80%8B%E8%8A%B1%E7%B5%AE-%E5%AF%8C%E5%A3%AB%E5%B1%B1%E6%B8%B8%E8%AE%B0%EF%BC%88%E4%B8%8B%EF%BC%89/index.html</url>
-    <content><![CDATA[<div id="dplayer7" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer7"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E3%80%8A%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1-%E5%A4%8F%E3%80%8B%E8%8A%B1%E7%B5%AE%20%E5%AF%8C%E5%A3%AB%E5%B1%B1%E6%B8%B8%E8%AE%B0%EF%BC%88%E4%B8%8A%EF%BC%89.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=2103122&cid=3262797"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
+    <title>《你的名字》圣地巡礼 摄影攻略</title>
+    <url>/video/426_video/%E3%80%8A%E4%BD%A0%E7%9A%84%E5%90%8D%E5%AD%97%E3%80%8B%E5%9C%A3%E5%9C%B0%E5%B7%A1%E7%A4%BC-%E6%91%84%E5%BD%B1%E6%94%BB%E7%95%A5/index.html</url>
+    <content><![CDATA[<div id="dplayer6" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer6"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%5BPC426%5D%E3%80%8A%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%8B%E5%9C%A3%E5%9C%B0%E5%B7%A1%E7%A4%BC%20%E6%91%84%E5%BD%B1%E6%94%BB%E7%95%A5.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=7730278&cid=12671909"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
 
 <blockquote>
-<p>投稿日期：2015-03-13 15:27:54<br>简介：自制 上半篇见：<a href="https://www.bilibili.com/video/av1870546/?spm_id_from=333.788.video.desc.click">av1870546</a> 各位久等了，终于把富士山下篇制作完成。感谢PRODUCER 01 MUSIC WORKS的劳动，让这一次视频的BGM实现了全部原创化。 PS：附上《日本印象-秋》 高码率版本+BGM下载：<a href="http://yun.baidu.com/share/link?shareid=3879404253&uk=3389451828">http://yun.baidu.com/share/link?shareid=3879404253&amp;uk=3389451828</a></p>
+<p>投稿日期：2016-12-28 03:44:33<br>简介：虽然因为季节不对，导致太阳角度、气候都会有一些差异，不过因为最近询问我关于是否会做《你的名字》圣地巡礼相关内容的用户太多了。。。我拗不过你们。。。 所以就把我踩点时随拍的素材，做成一期《你的名字》圣地巡礼的摄影攻略。 虽然说是攻略，不过我并不想只是和大家讨论很技术向的内容，所以这一次尝试做成了一种静静欣赏风景、感受自然的光影变化，最后捕捉需要的那几秒钟镜头的感觉。 当然，这次尝试做了一个完全没有原作BGM和原作截图对比的圣地巡礼，不知道。。可不可行？</p>
 </blockquote>
-<a class="btn-beautify pink larger" href="https://www.bilibili.com/video/BV1ks411S78X/" title="bilibili观看"><i class="fab fa-bilibili"></i><span>bilibili观看</span></a>
+<a class="btn-beautify pink larger" href="https://www.bilibili.com/video/BV1ks411a7w2/" title="bilibili观看"><i class="fab fa-bilibili"></i><span>bilibili观看</span></a>
 
-<a class="btn-beautify blue larger" href="https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E3%80%8A%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1-%E5%A4%8F%E3%80%8B%E8%8A%B1%E7%B5%AE%20%E5%AF%8C%E5%A3%AB%E5%B1%B1%E6%B8%B8%E8%AE%B0%EF%BC%88%E4%B8%8A%EF%BC%89.mp4" title="下载"><i class="fas fa-download"></i><span>下载</span></a>
+<a class="btn-beautify blue larger" href="https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%5BPC426%5D%E3%80%8A%E5%90%9B%E3%81%AE%E5%90%8D%E3%81%AF%E3%80%8B%E5%9C%A3%E5%9C%B0%E5%B7%A1%E7%A4%BC%20%E6%91%84%E5%BD%B1%E6%94%BB%E7%95%A5.mp4" title="下载"><i class="fas fa-download"></i><span>下载</span></a>
 ]]></content>
   </entry>
   <entry>
     <title>《日本印象-夏》花絮 富士山游记（上）</title>
     <url>/video/426_video/%E3%80%8A%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1-%E5%A4%8F%E3%80%8B%E8%8A%B1%E7%B5%AE-%E5%AF%8C%E5%A3%AB%E5%B1%B1%E6%B8%B8%E8%AE%B0%EF%BC%88%E4%B8%8A%EF%BC%89/index.html</url>
-    <content><![CDATA[<div id="dplayer8" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer8"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E3%80%8A%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1-%E5%A4%8F%E3%80%8B%E8%8A%B1%E7%B5%AE%20%E5%AF%8C%E5%A3%AB%E5%B1%B1%E6%B8%B8%E8%AE%B0%EF%BC%88%E4%B8%8A%EF%BC%89.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=1870546&cid=2885503"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
+    <content><![CDATA[<div id="dplayer7" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer7"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E3%80%8A%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1-%E5%A4%8F%E3%80%8B%E8%8A%B1%E7%B5%AE%20%E5%AF%8C%E5%A3%AB%E5%B1%B1%E6%B8%B8%E8%AE%B0%EF%BC%88%E4%B8%8A%EF%BC%89.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=1870546&cid=2885503"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
 
 <blockquote>
 <p>投稿日期：2015-01-08 18:31:56<br>简介：自制 很多去富士山的旅行团只会上到富士山五合目，简单拍照后返回，这一部作品记录的是我和一位小伙伴从五合目出发去往富士山顶看日出的过程。《日本印象-夏》中的富士山日出正是出自这次行程，希望能对办了自由行，打算攀登到富士山顶的同学提供参考；本子视频的所有BGM均为原创，感谢Producer01 Music Works制作组的付出；1周年回忆大图图包下载地址我会在回帖中放出。</p>
@@ -932,23 +916,22 @@
 ]]></content>
   </entry>
   <entry>
-    <title>【器材】426教你如何用胶片拍电影</title>
-    <url>/video/426_video/%E3%80%90%E5%99%A8%E6%9D%90%E3%80%91426%E6%95%99%E4%BD%A0%E5%A6%82%E4%BD%95%E7%94%A8%E8%83%B6%E7%89%87%E6%8B%8D%E7%94%B5%E5%BD%B1/index.html</url>
-    <content><![CDATA[<div id="dplayer9" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer9"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/426%E6%95%99%E4%BD%A0%E5%A6%82%E4%BD%95%E7%94%A8%E8%83%B6%E7%89%87%E6%8B%8D%E7%94%B5%E5%BD%B1/%E3%80%90%E6%96%B0%E6%8C%96%E5%9D%91%E3%80%91426%E6%95%99%E4%BD%A0%E5%A6%82%E4%BD%95%E7%94%A8%E8%83%B6%E7%89%87%E6%8B%8D%E7%94%B5%E5%BD%B1.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=2668750&cid=4168474"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
+    <title>《日本印象-夏》花絮 富士山游记（下）</title>
+    <url>/video/426_video/%E3%80%8A%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1-%E5%A4%8F%E3%80%8B%E8%8A%B1%E7%B5%AE-%E5%AF%8C%E5%A3%AB%E5%B1%B1%E6%B8%B8%E8%AE%B0%EF%BC%88%E4%B8%8B%EF%BC%89/index.html</url>
+    <content><![CDATA[<div id="dplayer8" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer8"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E3%80%8A%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1-%E5%A4%8F%E3%80%8B%E8%8A%B1%E7%B5%AE%20%E5%AF%8C%E5%A3%AB%E5%B1%B1%E6%B8%B8%E8%AE%B0%EF%BC%88%E4%B8%8A%EF%BC%89.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=2103122&cid=3262797"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
 
 <blockquote>
-<p>投稿日期：2015-08-02 15:23:42<br>简介：自制 我们的200ft 16mm胶片作业拍摄完成后，作为摄影监督的我需要保管设备，第二天还到学校。 所以就有了一整晚的机会来研究这台胶片电影机，在仔细研究的过程中也顺便拍了一段完整设备介绍和操作的教程，今天剪出来和大家分享。 这一步作品不仅可以从猎奇的角度看到以前的胶片电影摄影机的详细结构，还可以直接学到如何操作胶片电影机，希望大家喜欢。 4K版本压制成功后会放在下面的回复里</p>
+<p>投稿日期：2015-03-13 15:27:54<br>简介：自制 上半篇见：<a href="https://www.bilibili.com/video/av1870546/?spm_id_from=333.788.video.desc.click">av1870546</a> 各位久等了，终于把富士山下篇制作完成。感谢PRODUCER 01 MUSIC WORKS的劳动，让这一次视频的BGM实现了全部原创化。 PS：附上《日本印象-秋》 高码率版本+BGM下载：<a href="http://yun.baidu.com/share/link?shareid=3879404253&uk=3389451828">http://yun.baidu.com/share/link?shareid=3879404253&amp;uk=3389451828</a></p>
 </blockquote>
-<a class="btn-beautify pink larger" href="https://www.bilibili.com/video/BV1Vs411m7Ly/" title="bilibili观看"><i class="fab fa-bilibili"></i><span>bilibili观看</span></a>
+<a class="btn-beautify pink larger" href="https://www.bilibili.com/video/BV1ks411S78X/" title="bilibili观看"><i class="fab fa-bilibili"></i><span>bilibili观看</span></a>
 
-<a class="btn-beautify blue larger" href="https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/426%E6%95%99%E4%BD%A0%E5%A6%82%E4%BD%95%E7%94%A8%E8%83%B6%E7%89%87%E6%8B%8D%E7%94%B5%E5%BD%B1/%E3%80%90%E6%96%B0%E6%8C%96%E5%9D%91%E3%80%91426%E6%95%99%E4%BD%A0%E5%A6%82%E4%BD%95%E7%94%A8%E8%83%B6%E7%89%87%E6%8B%8D%E7%94%B5%E5%BD%B1.mp4" title="下载"><i class="fas fa-download"></i><span>下载</span></a>
-
+<a class="btn-beautify blue larger" href="https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E3%80%8A%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1-%E5%A4%8F%E3%80%8B%E8%8A%B1%E7%B5%AE%20%E5%AF%8C%E5%A3%AB%E5%B1%B1%E6%B8%B8%E8%AE%B0%EF%BC%88%E4%B8%8A%EF%BC%89.mp4" title="下载"><i class="fas fa-download"></i><span>下载</span></a>
 ]]></content>
   </entry>
   <entry>
     <title>【独立制作短片】426 日本篇Project Part.1 (2016)</title>
     <url>/video/426_video/%E3%80%90%E7%8B%AC%E7%AB%8B%E5%88%B6%E4%BD%9C%E7%9F%AD%E7%89%87%E3%80%91426%E6%97%A5%E6%9C%AC%E7%AF%87Project-Part-1-2016/index.html</url>
-    <content><![CDATA[<div id="dplayer10" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer10"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/426%20%E6%97%A5%E6%9C%AC%E7%AF%87Project%20Part.1%204k.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=6654598&cid=10831972"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
+    <content><![CDATA[<div id="dplayer9" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer9"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/426%20%E6%97%A5%E6%9C%AC%E7%AF%87Project%20Part.1%204k.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=6654598&cid=10831972"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
 
 <blockquote>
 <p>投稿日期：2016-10-13 10:11:30<br>简介：从到了日本之后，我从图片开始，到了音乐视频，然后尝试拍了游记和教程，多亏了大家的支持，一路走到这里。 但是在我心里始终在纠结，是否在日本的视频拍摄最终目标要放在小纪录片上？看了很多案例发现这样做是不行的，也许大家也感受到我继续平稳地去拍游记、科普，虽然可以靠制作委托赚到继续发展的钱，但是观众这边必然会审美疲劳，在一套流程可以平稳运行后，必须要马上跳出来迎接新的挑战，这对自己的学习和发展更好，也对观众更好。 于是从这个月开始，我要逐渐跳出之前创造的平稳模式，寻求更多的挑战了，那就是尝试制作短片。</p>
@@ -961,7 +944,7 @@
   <entry>
     <title>东京印象-春</title>
     <url>/video/426_video/%E4%B8%9C%E4%BA%AC%E5%8D%B0%E8%B1%A1-%E6%98%A5/index.html</url>
-    <content><![CDATA[<div id="dplayer11" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer11"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1/%5B%E4%B8%9C%E4%BA%AC%E5%8D%B0%E8%B1%A1-%E6%98%A5%5D%20pc426.com/%5B%E4%B8%9C%E4%BA%AC%E5%8D%B0%E8%B1%A1-%E6%98%A5%5D%20pc426.com.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=1084855&cid=147383376"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
+    <content><![CDATA[<div id="dplayer10" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer10"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1/%5B%E4%B8%9C%E4%BA%AC%E5%8D%B0%E8%B1%A1-%E6%98%A5%5D%20pc426.com/%5B%E4%B8%9C%E4%BA%AC%E5%8D%B0%E8%B1%A1-%E6%98%A5%5D%20pc426.com.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=1084855&cid=147383376"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
 
 <blockquote>
 <p>投稿日期：2014-04-26 10:07:43<br>简介：自制 第一部独立拍摄、调色、剪辑的视频作品，记录了2014年东京樱花满开那三天的精彩瞬间，希望大家喜欢||原档+女儿的桌面+BGM下载：<a href="http://pan.baidu.com/s/1qWuIkxA">http://pan.baidu.com/s/1qWuIkxA</a> 女儿的画师：@SundayNeko_O 、飘X00草帽</p>
@@ -973,9 +956,36 @@
 ]]></content>
   </entry>
   <entry>
+    <title>京都赏樱之旅 DAY2 岚山&amp;哲学之道</title>
+    <url>/video/426_video/%E4%BA%AC%E9%83%BD%E8%B5%8F%E6%A8%B1%E4%B9%8B%E6%97%85-DAY2-%E5%B2%9A%E5%B1%B1&amp;%E5%93%B2%E5%AD%A6%E4%B9%8B%E9%81%93/index.html</url>
+    <content><![CDATA[<div id="dplayer11" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer11"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%5Bwww.pc426.com%5D%E4%BA%AC%E9%83%BD%E8%B5%8F%E6%A8%B1%E4%B9%8B%E6%97%85%20DAY2%20%E5%B2%9A%E5%B1%B1%26%E5%93%B2%E5%AD%A6%E3%81%AE%E9%81%93/%5Bwww.pc426.com%5D%E4%BA%AC%E9%83%BD%E8%B5%8F%E6%A8%B1%E4%B9%8B%E6%97%85%20DAY2%20%E5%B2%9A%E5%B1%B1%26%E5%93%B2%E5%AD%A6%E3%81%AE%E9%81%93%204K.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=2897893&cid=4529549"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
+
+<blockquote>
+<p>投稿日期：2015-09-12 16:18:32<br>简介：自制 在经历了一整天的普通电车换乘（<a href="https://www.bilibili.com/video/av2457057/?spm_id_from=333.788.video.desc.click">av2457057</a>）。 以及第一天晚上尽情掉节操后（<a href="https://www.bilibili.com/video/av2621737/?spm_id_from=333.788.video.desc.click">av2621737</a>）。 我们终于在到达京都的第二天，正式开始了这一次旅途。 在这部花絮里，大家可以看到樱花季的岚山和哲学の道，具体的介绍都在视频里。 主要考虑到美丽的景色是不需要讲解的，所以本篇整整给大家提供了两大段的音乐视频，希望大家喜欢。 4K和大图下载正在压制，我会会发在回复中，如果百度网盘出问题这一次可能还需要大家帮忙转存。</p>
+</blockquote>
+<a class="btn-beautify pink larger" href="https://www.bilibili.com/video/BV1Cs41117Mz/" title="bilibili观看"><i class="fab fa-bilibili"></i><span>bilibili观看</span></a>
+
+<a class="btn-beautify blue larger" href="https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%5Bwww.pc426.com%5D%E4%BA%AC%E9%83%BD%E8%B5%8F%E6%A8%B1%E4%B9%8B%E6%97%85%20DAY2%20%E5%B2%9A%E5%B1%B1%26%E5%93%B2%E5%AD%A6%E3%81%AE%E9%81%93/%5Bwww.pc426.com%5D%E4%BA%AC%E9%83%BD%E8%B5%8F%E6%A8%B1%E4%B9%8B%E6%97%85%20DAY2%20%E5%B2%9A%E5%B1%B1%26%E5%93%B2%E5%AD%A6%E3%81%AE%E9%81%93%204K.mp4" title="下载"><i class="fas fa-download"></i><span>下载</span></a>
+]]></content>
+  </entry>
+  <entry>
+    <title>【器材】426教你如何用胶片拍电影</title>
+    <url>/video/426_video/%E3%80%90%E5%99%A8%E6%9D%90%E3%80%91426%E6%95%99%E4%BD%A0%E5%A6%82%E4%BD%95%E7%94%A8%E8%83%B6%E7%89%87%E6%8B%8D%E7%94%B5%E5%BD%B1/index.html</url>
+    <content><![CDATA[<div id="dplayer12" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer12"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/426%E6%95%99%E4%BD%A0%E5%A6%82%E4%BD%95%E7%94%A8%E8%83%B6%E7%89%87%E6%8B%8D%E7%94%B5%E5%BD%B1/%E3%80%90%E6%96%B0%E6%8C%96%E5%9D%91%E3%80%91426%E6%95%99%E4%BD%A0%E5%A6%82%E4%BD%95%E7%94%A8%E8%83%B6%E7%89%87%E6%8B%8D%E7%94%B5%E5%BD%B1.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=2668750&cid=4168474"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
+
+<blockquote>
+<p>投稿日期：2015-08-02 15:23:42<br>简介：自制 我们的200ft 16mm胶片作业拍摄完成后，作为摄影监督的我需要保管设备，第二天还到学校。 所以就有了一整晚的机会来研究这台胶片电影机，在仔细研究的过程中也顺便拍了一段完整设备介绍和操作的教程，今天剪出来和大家分享。 这一步作品不仅可以从猎奇的角度看到以前的胶片电影摄影机的详细结构，还可以直接学到如何操作胶片电影机，希望大家喜欢。 4K版本压制成功后会放在下面的回复里</p>
+</blockquote>
+<a class="btn-beautify pink larger" href="https://www.bilibili.com/video/BV1Vs411m7Ly/" title="bilibili观看"><i class="fab fa-bilibili"></i><span>bilibili观看</span></a>
+
+<a class="btn-beautify blue larger" href="https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/426%E6%95%99%E4%BD%A0%E5%A6%82%E4%BD%95%E7%94%A8%E8%83%B6%E7%89%87%E6%8B%8D%E7%94%B5%E5%BD%B1/%E3%80%90%E6%96%B0%E6%8C%96%E5%9D%91%E3%80%91426%E6%95%99%E4%BD%A0%E5%A6%82%E4%BD%95%E7%94%A8%E8%83%B6%E7%89%87%E6%8B%8D%E7%94%B5%E5%BD%B1.mp4" title="下载"><i class="fas fa-download"></i><span>下载</span></a>
+
+]]></content>
+  </entry>
+  <entry>
     <title>大雪中的秋叶原</title>
     <url>/video/426_video/%E5%A4%A7%E9%9B%AA%E4%B8%AD%E7%9A%84%E7%A7%8B%E5%8F%B6%E5%8E%9F/index.html</url>
-    <content><![CDATA[<div id="dplayer12" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer12"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E9%9B%AA%E4%B8%AD%E7%9A%84%E7%A7%8B%E5%8F%B6%E5%8E%9F.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=965933&cid=1398727"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
+    <content><![CDATA[<div id="dplayer13" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer13"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E9%9B%AA%E4%B8%AD%E7%9A%84%E7%A7%8B%E5%8F%B6%E5%8E%9F.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=965933&cid=1398727"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
 
 <blockquote>
 <p>投稿日期：2014-02-15 10:24:41<br>简介：白天和夜间各出去一趟，全身湿♂透的状态拍了4个小时，最后得到了这一组应该说略少见的作品吧，1080P+320k，建议全屏，希望大家喜欢；PS：这也是我的第一部视频作品，有槽点请尽管吐，我会努力改进的；2500宽大图+曲包下载：<a href="http://pan.baidu.com/s/1jGI9byI">http://pan.baidu.com/s/1jGI9byI</a> 没有被压缩的视频下载：<a href="http://pan.baidu.com/s/1eQssLmq">http://pan.baidu.com/s/1eQssLmq</a> 后半段6分钟诅咒分P修复</p>
@@ -989,7 +999,7 @@
   <entry>
     <title>我们的2016</title>
     <url>/video/426_video/%E6%88%91%E4%BB%AC%E7%9A%842016/index.html</url>
-    <content><![CDATA[<div id="dplayer13" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer13"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E6%88%91%E4%BB%AC%E7%9A%842016.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=8235081&cid=13547550"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
+    <content><![CDATA[<div id="dplayer14" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer14"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E6%88%91%E4%BB%AC%E7%9A%842016.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=8235081&cid=13547550"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
 
 <blockquote>
 <p>投稿日期：2017-01-26 18:22:51<br>简介：感谢大家一同和我见证奇迹和历史的发生。 2016年我们一起，在资源严重不足的情况下，做出了这么多前所未有的直播和视频作品。 我感觉，也是时候重新收拾行囊向下一站出发了。</p>
@@ -1000,22 +1010,22 @@
 ]]></content>
   </entry>
   <entry>
-    <title>京都赏樱之旅 DAY2 岚山&amp;哲学之道</title>
-    <url>/video/426_video/%E4%BA%AC%E9%83%BD%E8%B5%8F%E6%A8%B1%E4%B9%8B%E6%97%85-DAY2-%E5%B2%9A%E5%B1%B1&amp;%E5%93%B2%E5%AD%A6%E4%B9%8B%E9%81%93/index.html</url>
-    <content><![CDATA[<div id="dplayer14" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer14"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%5Bwww.pc426.com%5D%E4%BA%AC%E9%83%BD%E8%B5%8F%E6%A8%B1%E4%B9%8B%E6%97%85%20DAY2%20%E5%B2%9A%E5%B1%B1%26%E5%93%B2%E5%AD%A6%E3%81%AE%E9%81%93/%5Bwww.pc426.com%5D%E4%BA%AC%E9%83%BD%E8%B5%8F%E6%A8%B1%E4%B9%8B%E6%97%85%20DAY2%20%E5%B2%9A%E5%B1%B1%26%E5%93%B2%E5%AD%A6%E3%81%AE%E9%81%93%204K.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=2897893&cid=4529549"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
+    <title>好想和你一起、欣赏这烂漫的樱花</title>
+    <url>/video/426_video/%E5%A5%BD%E6%83%B3%E5%92%8C%E4%BD%A0%E4%B8%80%E8%B5%B7%E3%80%81%E6%AC%A3%E8%B5%8F%E8%BF%99%E7%83%82%E6%BC%AB%E7%9A%84%E6%A8%B1%E8%8A%B1/index.html</url>
+    <content><![CDATA[<div id="dplayer15" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer15"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/Sakura2015_4k_50M_by_pc426.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=2252139&cid=147479472"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
 
 <blockquote>
-<p>投稿日期：2015-09-12 16:18:32<br>简介：自制 在经历了一整天的普通电车换乘（<a href="https://www.bilibili.com/video/av2457057/?spm_id_from=333.788.video.desc.click">av2457057</a>）。 以及第一天晚上尽情掉节操后（<a href="https://www.bilibili.com/video/av2621737/?spm_id_from=333.788.video.desc.click">av2621737</a>）。 我们终于在到达京都的第二天，正式开始了这一次旅途。 在这部花絮里，大家可以看到樱花季的岚山和哲学の道，具体的介绍都在视频里。 主要考虑到美丽的景色是不需要讲解的，所以本篇整整给大家提供了两大段的音乐视频，希望大家喜欢。 4K和大图下载正在压制，我会会发在回复中，如果百度网盘出问题这一次可能还需要大家帮忙转存。</p>
+<p>投稿日期：2015-04-24 17:24:50<br>简介：自制 最近补完了《四月是你的谎言》，超棒的一部作品，只是可惜在樱花季中相遇的男主和女主，永远也没有机会一起看到相遇时的美景。 在分不清二次元还是三次元的梦幻景色中，迎着飘落的樱花瓣，听着远处的音乐，幻想着和那个女孩子的相遇。————-直传码率太低各种糊成一片。。提供4K 50M码率版本下载：<a href="http://www.pc426.com/thread-96901-1-1.html">http://www.pc426.com/thread-96901-1-1.html</a></p>
 </blockquote>
-<a class="btn-beautify pink larger" href="https://www.bilibili.com/video/BV1Cs41117Mz/" title="bilibili观看"><i class="fab fa-bilibili"></i><span>bilibili观看</span></a>
+<a class="btn-beautify pink larger" href="https://www.bilibili.com/video/BV1js411D7Dm/" title="bilibili观看"><i class="fab fa-bilibili"></i><span>bilibili观看</span></a>
 
-<a class="btn-beautify blue larger" href="https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%5Bwww.pc426.com%5D%E4%BA%AC%E9%83%BD%E8%B5%8F%E6%A8%B1%E4%B9%8B%E6%97%85%20DAY2%20%E5%B2%9A%E5%B1%B1%26%E5%93%B2%E5%AD%A6%E3%81%AE%E9%81%93/%5Bwww.pc426.com%5D%E4%BA%AC%E9%83%BD%E8%B5%8F%E6%A8%B1%E4%B9%8B%E6%97%85%20DAY2%20%E5%B2%9A%E5%B1%B1%26%E5%93%B2%E5%AD%A6%E3%81%AE%E9%81%93%204K.mp4" title="下载"><i class="fas fa-download"></i><span>下载</span></a>
+<a class="btn-beautify blue larger" href="https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/Sakura2015_4k_50M_by_pc426.mp4" title="下载"><i class="fas fa-download"></i><span>下载</span></a>
 ]]></content>
   </entry>
   <entry>
     <title>日本印象-冬</title>
     <url>/video/426_video/%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1-%E5%86%AC/index.html</url>
-    <content><![CDATA[<div id="dplayer15" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer15"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1/%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1-%E5%86%AC/%5Bwww.pc426.com%5D%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1%20%E5%86%AC.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=2351378&cid=3672950"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
+    <content><![CDATA[<div id="dplayer16" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer16"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1/%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1-%E5%86%AC/%5Bwww.pc426.com%5D%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1%20%E5%86%AC.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=2351378&cid=3672950"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
 
 <blockquote>
 <p>投稿日期：2015-05-22 16:46:48<br>简介：下载：<a href="http://www.pc426.com/thread-98864-1-1.html">http://www.pc426.com/thread-98864-1-1.html</a> ；为了冬季篇的取材，我坐普通电车去了北海道，东京—札幌，只是在路上的总时间就达到了50小时以上，下着暴雪的夜晚，一望无际的雪原只有零星的点点灯光，车内的温暖和昏黄的灯光与车外的寒冷寂静，亲身感受到了秒5男主绝望的心情；到达目的地后天气转好，日出的温暖，干燥清新的空气，清澈蓝天下洁白无瑕的雪地，都给我留下了深刻的印象，在这里分享出我的见闻，希望大家喜欢。</p>
@@ -1026,9 +1036,22 @@
 ]]></content>
   </entry>
   <entry>
+    <title>接近喵帕斯的田野--JR日本最南端车站</title>
+    <url>/video/426_video/%E6%8E%A5%E8%BF%91%E5%96%B5%E5%B8%95%E6%96%AF%E7%9A%84%E7%94%B0%E9%87%8E-JR%E6%97%A5%E6%9C%AC%E6%9C%80%E5%8D%97%E7%AB%AF%E8%BD%A6%E7%AB%99/index.html</url>
+    <content><![CDATA[<div id="dplayer17" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer17"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E6%8E%A5%E8%BF%91%E5%96%B5%E5%B8%95%E6%96%AF%E7%9A%84%E7%94%B0%E9%87%8E%E2%80%94%E2%80%94JR%E6%97%A5%E6%9C%AC%E6%9C%80%E5%8D%97%E7%AB%AF%E8%BD%A6%E7%AB%99.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=16604153&cid=27078995"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
+
+<blockquote>
+<p>投稿日期：2017-11-23 22:34:52<br>简介：现在继续在尝试提升在飞机上剪片子的出片质量，这一期是在往返东京–广州的途中剪辑完成的，可能会有一些瑕疵，大家见谅。 JR最南端车站很久之前就想去了，因为这里能给你一种非常接近悠哉日常大王一样的氛围。 从无人车站下车，车站上就可以看到广阔的田野，步行一会就可以看到大海，一直行程很赶的我在这次破了个例，选择悠闲的散步，然后和大家分享这样的放松感觉。 去西大山的交通比较简单，从鹿儿岛中央直接坐普通车到西大山就可以，不过在去西大山之前，建议按照我的行程利用时刻表再去一</p>
+</blockquote>
+<a class="btn-beautify pink larger" href="https://www.bilibili.com/video/BV1mx411V7aG/" title="bilibili观看"><i class="fab fa-bilibili"></i><span>bilibili观看</span></a>
+
+<a class="btn-beautify blue larger" href="https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E6%8E%A5%E8%BF%91%E5%96%B5%E5%B8%95%E6%96%AF%E7%9A%84%E7%94%B0%E9%87%8E%E2%80%94%E2%80%94JR%E6%97%A5%E6%9C%AC%E6%9C%80%E5%8D%97%E7%AB%AF%E8%BD%A6%E7%AB%99.mp4" title="下载"><i class="fas fa-download"></i><span>下载</span></a>
+]]></content>
+  </entry>
+  <entry>
     <title>日本印象-夏</title>
     <url>/video/426_video/%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1-%E5%A4%8F/index.html</url>
-    <content><![CDATA[<div id="dplayer16" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer16"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1/%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1-%E5%A4%8F/%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1-%E5%A4%8F.mp4","pic":"https://img.mitsumune.top/blog/426/_MG_7305.jpg"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=1604368&cid=2438023"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
+    <content><![CDATA[<div id="dplayer18" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer18"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1/%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1-%E5%A4%8F/%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1-%E5%A4%8F.mp4","pic":"https://img.mitsumune.top/blog/426/_MG_7305.jpg"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=1604368&cid=2438023"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
 
 <blockquote>
 <p>投稿日期：2014-10-08 15:29:53<br>简介：自制 东京印象-春得到了意想不到的反响，其实我知道这个成功更多依赖于美丽的景色，所以夏季篇的制作过程始终顶着很大的压力，怎样在祭典，烟花大会，蓝天白云，沙滩，高山的基础上表达出大家感觉并不是很重复的感觉，然后让大家感觉到诚意？于是坑了很长很长时间后终于决定将这个版本发出来，与大家分享我在日本的第一个夏天的所见所闻。另外感谢丧男在拍摄过程中的协助，本篇如果上了首页我会放出1080P原片的下载。</p>
@@ -1041,7 +1064,7 @@
   <entry>
     <title>日本印象-秋</title>
     <url>/video/426_video/%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1-%E7%A7%8B/index.html</url>
-    <content><![CDATA[<div id="dplayer17" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer17"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1/%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1-%E7%A7%8B/%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1-%E7%A7%8B.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=1940049&cid=2997649"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
+    <content><![CDATA[<div id="dplayer19" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer19"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1/%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1-%E7%A7%8B/%E6%97%A5%E6%9C%AC%E5%8D%B0%E8%B1%A1-%E7%A7%8B.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=1940049&cid=2997649"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
 
 <blockquote>
 <p>投稿日期：2015-01-30 15:55:30<br>简介：自制 9月的日本，我又闻到了熟悉的味道；2012年的秋天，我第一次来到日本，彻底被这里的风光和人文气息所吸引，在短短的15天行程结束后，确定了赴日留学计划；2013年的秋天，我克服重重困难，只身来到日本，开始了又一次从0开始的拼搏；2014年的秋天，我终于到达了拼搏途中相对安全的驿站，短暂停留，准备着又一次出发；我享受着透过黄叶洒在身上的阳光，感受着日本古典的一面，开始了日本印象-秋的拍摄。</p>
@@ -1052,22 +1075,9 @@
 ]]></content>
   </entry>
   <entry>
-    <title>好想和你一起、欣赏这烂漫的樱花</title>
-    <url>/video/426_video/%E5%A5%BD%E6%83%B3%E5%92%8C%E4%BD%A0%E4%B8%80%E8%B5%B7%E3%80%81%E6%AC%A3%E8%B5%8F%E8%BF%99%E7%83%82%E6%BC%AB%E7%9A%84%E6%A8%B1%E8%8A%B1/index.html</url>
-    <content><![CDATA[<div id="dplayer18" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer18"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/Sakura2015_4k_50M_by_pc426.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=2252139&cid=147479472"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
-
-<blockquote>
-<p>投稿日期：2015-04-24 17:24:50<br>简介：自制 最近补完了《四月是你的谎言》，超棒的一部作品，只是可惜在樱花季中相遇的男主和女主，永远也没有机会一起看到相遇时的美景。 在分不清二次元还是三次元的梦幻景色中，迎着飘落的樱花瓣，听着远处的音乐，幻想着和那个女孩子的相遇。————-直传码率太低各种糊成一片。。提供4K 50M码率版本下载：<a href="http://www.pc426.com/thread-96901-1-1.html">http://www.pc426.com/thread-96901-1-1.html</a></p>
-</blockquote>
-<a class="btn-beautify pink larger" href="https://www.bilibili.com/video/BV1js411D7Dm/" title="bilibili观看"><i class="fab fa-bilibili"></i><span>bilibili观看</span></a>
-
-<a class="btn-beautify blue larger" href="https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/Sakura2015_4k_50M_by_pc426.mp4" title="下载"><i class="fas fa-download"></i><span>下载</span></a>
-]]></content>
-  </entry>
-  <entry>
     <title>時間与記憶 不属于我的日常</title>
     <url>/video/426_video/%E6%99%82%E9%96%93%E4%B8%8E%E8%A8%98%E6%86%B6-%E4%B8%8D%E5%B1%9E%E4%BA%8E%E6%88%91%E7%9A%84%E6%97%A5%E5%B8%B8/index.html</url>
-    <content><![CDATA[<div id="dplayer19" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer19"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E6%97%B6%E9%97%B4%26%E8%AE%B0%E5%BF%86%204K/%5BTime%26memory%5D_%204K_www.pc426.com.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=2519737&cid=3938117"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
+    <content><![CDATA[<div id="dplayer20" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer20"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E6%97%B6%E9%97%B4%26%E8%AE%B0%E5%BF%86%204K/%5BTime%26memory%5D_%204K_www.pc426.com.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=2519737&cid=3938117"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
 
 <blockquote>
 <p>投稿日期：2015-07-03 16:51:44<br>简介：自制 在日本的这两年间，对梦想的追逐，对自己的超越一刻都没有放松过。在这样紧张的日常中，时间飞逝，转眼间已经过了2年。原本以为掌握了更多能拿得出手的能力后，就会有很多人可以理解我，然后可以大家可以互相帮助，鼓励，变强，但是实际的结果是，我被进一步疏远。一种恐怖的孤独感袭来，原来我一直是一位旁观者。4K下载会在论坛（<a href="http://www.pc426.com/">www.pc426.com</a> ）发布。</p>
@@ -1078,35 +1088,9 @@
 ]]></content>
   </entry>
   <entry>
-    <title>直播登富士山全程是一种怎样的体验？</title>
-    <url>/video/426_video/%E7%9B%B4%E6%92%AD%E7%99%BB%E5%AF%8C%E5%A3%AB%E5%B1%B1%E5%85%A8%E7%A8%8B%E6%98%AF%E4%B8%80%E7%A7%8D%E6%80%8E%E6%A0%B7%E7%9A%84%E4%BD%93%E9%AA%8C%EF%BC%9F/index.html</url>
-    <content><![CDATA[<div id="dplayer20" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer20"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/4K%5BPC426%5D%E7%9B%B4%E6%92%AD%E7%99%BB%E5%AF%8C%E5%A3%AB%E5%B1%B1%E5%85%A8%E7%A8%8B%E6%98%AF%E4%B8%80%E7%A7%8D%E6%80%8E%E6%A0%B7%E7%9A%84%E4%BD%93%E9%AA%8C%EF%BC%9F/4K%5BPC426%5D%E7%9B%B4%E6%92%AD%E7%99%BB%E5%AF%8C%E5%A3%AB%E5%B1%B1%E5%85%A8%E7%A8%8B%E6%98%AF%E4%B8%80%E7%A7%8D%E6%80%8E%E6%A0%B7%E7%9A%84%E4%BD%93%E9%AA%8C%EF%BC%9F.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=14575645&cid=23766643"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
-
-<blockquote>
-<p>投稿日期：2017-09-18 13:21:33<br>简介：“我要全程直播爬富士山”两年前拖着买菜车直播的我开玩笑这样说道 去年第一次尝试直播爬富士山，却因为天气原因被迫中断 今年也做着失败的心理准备，继续挑战这个目标 2017年8月4日，北京时间19:48:59，我和小伙伴一起， 用了580分钟时间，直播了富士山吉田线登顶的全程。 繁华的东京市区，烂漫的樱花，静谧的山村，茫茫雪原，再到日本之巅的日出 感谢大家在浮躁的环境下，给我动力完成了我自己都不敢相信的直播 直播通知见微博@guanyuhan426 微信 PC426 斗鱼直播间号 2135</p>
-</blockquote>
-<a class="btn-beautify pink larger" href="https://www.bilibili.com/video/BV19x411s7tM/" title="bilibili观看"><i class="fab fa-bilibili"></i><span>bilibili观看</span></a>
-
-<a class="btn-beautify blue larger" href="https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/4K%5BPC426%5D%E7%9B%B4%E6%92%AD%E7%99%BB%E5%AF%8C%E5%A3%AB%E5%B1%B1%E5%85%A8%E7%A8%8B%E6%98%AF%E4%B8%80%E7%A7%8D%E6%80%8E%E6%A0%B7%E7%9A%84%E4%BD%93%E9%AA%8C%EF%BC%9F/4K%5BPC426%5D%E7%9B%B4%E6%92%AD%E7%99%BB%E5%AF%8C%E5%A3%AB%E5%B1%B1%E5%85%A8%E7%A8%8B%E6%98%AF%E4%B8%80%E7%A7%8D%E6%80%8E%E6%A0%B7%E7%9A%84%E4%BD%93%E9%AA%8C%EF%BC%9F.mp4" title="下载"><i class="fas fa-download"></i><span>下载</span></a>
-]]></content>
-  </entry>
-  <entry>
-    <title>接近喵帕斯的田野--JR日本最南端车站</title>
-    <url>/video/426_video/%E6%8E%A5%E8%BF%91%E5%96%B5%E5%B8%95%E6%96%AF%E7%9A%84%E7%94%B0%E9%87%8E-JR%E6%97%A5%E6%9C%AC%E6%9C%80%E5%8D%97%E7%AB%AF%E8%BD%A6%E7%AB%99/index.html</url>
-    <content><![CDATA[<div id="dplayer21" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer21"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E6%8E%A5%E8%BF%91%E5%96%B5%E5%B8%95%E6%96%AF%E7%9A%84%E7%94%B0%E9%87%8E%E2%80%94%E2%80%94JR%E6%97%A5%E6%9C%AC%E6%9C%80%E5%8D%97%E7%AB%AF%E8%BD%A6%E7%AB%99.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=16604153&cid=27078995"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
-
-<blockquote>
-<p>投稿日期：2017-11-23 22:34:52<br>简介：现在继续在尝试提升在飞机上剪片子的出片质量，这一期是在往返东京–广州的途中剪辑完成的，可能会有一些瑕疵，大家见谅。 JR最南端车站很久之前就想去了，因为这里能给你一种非常接近悠哉日常大王一样的氛围。 从无人车站下车，车站上就可以看到广阔的田野，步行一会就可以看到大海，一直行程很赶的我在这次破了个例，选择悠闲的散步，然后和大家分享这样的放松感觉。 去西大山的交通比较简单，从鹿儿岛中央直接坐普通车到西大山就可以，不过在去西大山之前，建议按照我的行程利用时刻表再去一</p>
-</blockquote>
-<a class="btn-beautify pink larger" href="https://www.bilibili.com/video/BV1mx411V7aG/" title="bilibili观看"><i class="fab fa-bilibili"></i><span>bilibili观看</span></a>
-
-<a class="btn-beautify blue larger" href="https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E6%8E%A5%E8%BF%91%E5%96%B5%E5%B8%95%E6%96%AF%E7%9A%84%E7%94%B0%E9%87%8E%E2%80%94%E2%80%94JR%E6%97%A5%E6%9C%AC%E6%9C%80%E5%8D%97%E7%AB%AF%E8%BD%A6%E7%AB%99.mp4" title="下载"><i class="fas fa-download"></i><span>下载</span></a>
-]]></content>
-  </entry>
-  <entry>
     <title>珍藏在记忆中的阿苏</title>
     <url>/video/426_video/%E7%8F%8D%E8%97%8F%E5%9C%A8%E8%AE%B0%E5%BF%86%E4%B8%AD%E7%9A%84%E9%98%BF%E8%8B%8F/index.html</url>
-    <content><![CDATA[<div id="dplayer22" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer22"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E9%87%8D%E6%B8%B8%E9%98%BF%E8%8B%8F.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=16183719&cid=26412999"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
+    <content><![CDATA[<div id="dplayer21" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer21"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E9%87%8D%E6%B8%B8%E9%98%BF%E8%8B%8F.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=16183719&cid=26412999"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
 
 <blockquote>
 <p>投稿日期：2017-11-10 11:47:41<br>简介：重游阿苏的第二天，我们很幸运的等到了晴天，本来想我们可以重新感受阿苏的美景，但是大雾退去后我们发现，这里已经被毁了。 这是我第一次亲自接触并感受到历史，曾经拍摄的阿苏因为地震、台风、火山爆发的摧残已经不在了，现在我们只能从之前的视频中回味阿苏的景色。 也很怀念我还在上语言学校的那段时间，可以打工攒钱，然后在假期的时候和小伙伴一起出去玩，我们也很庆幸抓住了这个机会，因为从语言学校毕业后，就很难聚在一起了。</p>
@@ -1114,6 +1098,19 @@
 <a class="btn-beautify pink larger" href="https://www.bilibili.com/video/BV1wx41177hS/" title="bilibili观看"><i class="fab fa-bilibili"></i><span>bilibili观看</span></a>
 
 <a class="btn-beautify blue larger" href="https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E9%87%8D%E6%B8%B8%E9%98%BF%E8%8B%8F.mp4" title="下载"><i class="fas fa-download"></i><span>下载</span></a>
+]]></content>
+  </entry>
+  <entry>
+    <title>直播登富士山全程是一种怎样的体验？</title>
+    <url>/video/426_video/%E7%9B%B4%E6%92%AD%E7%99%BB%E5%AF%8C%E5%A3%AB%E5%B1%B1%E5%85%A8%E7%A8%8B%E6%98%AF%E4%B8%80%E7%A7%8D%E6%80%8E%E6%A0%B7%E7%9A%84%E4%BD%93%E9%AA%8C%EF%BC%9F/index.html</url>
+    <content><![CDATA[<div id="dplayer22" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer22"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/4K%5BPC426%5D%E7%9B%B4%E6%92%AD%E7%99%BB%E5%AF%8C%E5%A3%AB%E5%B1%B1%E5%85%A8%E7%A8%8B%E6%98%AF%E4%B8%80%E7%A7%8D%E6%80%8E%E6%A0%B7%E7%9A%84%E4%BD%93%E9%AA%8C%EF%BC%9F/4K%5BPC426%5D%E7%9B%B4%E6%92%AD%E7%99%BB%E5%AF%8C%E5%A3%AB%E5%B1%B1%E5%85%A8%E7%A8%8B%E6%98%AF%E4%B8%80%E7%A7%8D%E6%80%8E%E6%A0%B7%E7%9A%84%E4%BD%93%E9%AA%8C%EF%BC%9F.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=14575645&cid=23766643"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
+
+<blockquote>
+<p>投稿日期：2017-09-18 13:21:33<br>简介：“我要全程直播爬富士山”两年前拖着买菜车直播的我开玩笑这样说道 去年第一次尝试直播爬富士山，却因为天气原因被迫中断 今年也做着失败的心理准备，继续挑战这个目标 2017年8月4日，北京时间19:48:59，我和小伙伴一起， 用了580分钟时间，直播了富士山吉田线登顶的全程。 繁华的东京市区，烂漫的樱花，静谧的山村，茫茫雪原，再到日本之巅的日出 感谢大家在浮躁的环境下，给我动力完成了我自己都不敢相信的直播 直播通知见微博@guanyuhan426 微信 PC426 斗鱼直播间号 2135</p>
+</blockquote>
+<a class="btn-beautify pink larger" href="https://www.bilibili.com/video/BV19x411s7tM/" title="bilibili观看"><i class="fab fa-bilibili"></i><span>bilibili观看</span></a>
+
+<a class="btn-beautify blue larger" href="https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/4K%5BPC426%5D%E7%9B%B4%E6%92%AD%E7%99%BB%E5%AF%8C%E5%A3%AB%E5%B1%B1%E5%85%A8%E7%A8%8B%E6%98%AF%E4%B8%80%E7%A7%8D%E6%80%8E%E6%A0%B7%E7%9A%84%E4%BD%93%E9%AA%8C%EF%BC%9F/4K%5BPC426%5D%E7%9B%B4%E6%92%AD%E7%99%BB%E5%AF%8C%E5%A3%AB%E5%B1%B1%E5%85%A8%E7%A8%8B%E6%98%AF%E4%B8%80%E7%A7%8D%E6%80%8E%E6%A0%B7%E7%9A%84%E4%BD%93%E9%AA%8C%EF%BC%9F.mp4" title="下载"><i class="fas fa-download"></i><span>下载</span></a>
 ]]></content>
   </entry>
   <entry>
@@ -1130,22 +1127,9 @@
 ]]></content>
   </entry>
   <entry>
-    <title>节操满满的秋叶原之旅</title>
-    <url>/video/426_video/%E8%8A%82%E6%93%8D%E6%BB%A1%E6%BB%A1%E7%9A%84%E7%A7%8B%E5%8F%B6%E5%8E%9F%E4%B9%8B%E6%97%85/index.html</url>
-    <content><![CDATA[<div id="dplayer24" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer24"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E8%8A%82%E6%93%8D%E6%BB%A1%E6%BB%A1%E7%9A%84%E7%A7%8B%E5%8F%B6%E5%8E%9F%E4%B9%8B%E6%97%85.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=2172083&cid=3379749"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
-
-<blockquote>
-<p>投稿日期：2015-04-03 09:16:06<br>简介：自制 在去年记录了日本的四季之后（虽然冬季篇还在坑着。。）今年打算尝试做一些具体到各个圣地的音乐视频。 作为一名宅，第一个为大家展现的果断是秋叶原。 考虑到秋叶原相关的视频比较多，于是根据现有的所有内容，仔细统计了这些作品中最少出现的地点，然后规划了路线，再通过一些梗，还有一些经典场景的重现，尝试从并不浮于“二次元”表面的角度来为大家展示这个圣地。 里面的梗和圣地大家能认出多少？</p>
-</blockquote>
-<a class="btn-beautify pink larger" href="https://www.bilibili.com/video/BV1As411D7Zq/" title="bilibili观看"><i class="fab fa-bilibili"></i><span>bilibili观看</span></a>
-
-<a class="btn-beautify blue larger" href="https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E8%8A%82%E6%93%8D%E6%BB%A1%E6%BB%A1%E7%9A%84%E7%A7%8B%E5%8F%B6%E5%8E%9F%E4%B9%8B%E6%97%85.mp4" title="下载"><i class="fas fa-download"></i><span>下载</span></a>
-]]></content>
-  </entry>
-  <entry>
     <title>触摸日本的退役电车--九州铁道纪念馆</title>
     <url>/video/426_video/%E8%A7%A6%E6%91%B8%E6%97%A5%E6%9C%AC%E7%9A%84%E9%80%80%E5%BD%B9%E7%94%B5%E8%BD%A6-%E4%B9%9D%E5%B7%9E%E9%93%81%E9%81%93%E7%BA%AA%E5%BF%B5%E9%A6%86/index.html</url>
-    <content><![CDATA[<div id="dplayer25" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer25"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E8%A7%A6%E6%91%B8%E6%97%A5%E6%9C%AC%E7%9A%84%E9%80%80%E5%BD%B9%E7%94%B5%E8%BD%A6%E2%80%94%E2%80%94%E4%B9%9D%E5%B7%9E%E9%93%81%E9%81%93%E7%BA%AA%E5%BF%B5%E9%A6%86.MP4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=15761143&cid=25667198"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
+    <content><![CDATA[<div id="dplayer24" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer24"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E8%A7%A6%E6%91%B8%E6%97%A5%E6%9C%AC%E7%9A%84%E9%80%80%E5%BD%B9%E7%94%B5%E8%BD%A6%E2%80%94%E2%80%94%E4%B9%9D%E5%B7%9E%E9%93%81%E9%81%93%E7%BA%AA%E5%BF%B5%E9%A6%86.MP4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=15761143&cid=25667198"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
 
 <blockquote>
 <p>投稿日期：2017-10-27 12:01:49<br>简介：公众号：PC426 微博：@guanyuhan426 日本全国有好多个铁道博物馆，这里面都可以直接触摸各种经典的退役车辆，作为一半铁道宅的我，一直想要去看全。 2017年10月2号，因为一整天都在下雨，加上我们在北九州，于是就产生了去九州铁道纪念馆直播一下的想法。 另外九州的铁道文化非常值得一看，除了这一期去的铁道纪念馆之外，还有各种特色的特急列车可以去体验，可以说是日本最会玩的铁道公司 九州铁道纪念馆就在门司港站旁边，出了站就有路牌能找到</p>
@@ -1153,6 +1137,19 @@
 <a class="btn-beautify pink larger" href="https://www.bilibili.com/video/BV1hx41177Xm/?vd_source=833a7aa16e0ab8cffee0222dc8156bbe" title="bilibili观看"><i class="fab fa-bilibili"></i><span>bilibili观看</span></a>
 
 <a class="btn-beautify blue larger" href="https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E8%A7%A6%E6%91%B8%E6%97%A5%E6%9C%AC%E7%9A%84%E9%80%80%E5%BD%B9%E7%94%B5%E8%BD%A6%E2%80%94%E2%80%94%E4%B9%9D%E5%B7%9E%E9%93%81%E9%81%93%E7%BA%AA%E5%BF%B5%E9%A6%86.MP4" title="下载"><i class="fas fa-download"></i><span>下载</span></a>
+]]></content>
+  </entry>
+  <entry>
+    <title>节操满满的秋叶原之旅</title>
+    <url>/video/426_video/%E8%8A%82%E6%93%8D%E6%BB%A1%E6%BB%A1%E7%9A%84%E7%A7%8B%E5%8F%B6%E5%8E%9F%E4%B9%8B%E6%97%85/index.html</url>
+    <content><![CDATA[<div id="dplayer25" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer25"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E8%8A%82%E6%93%8D%E6%BB%A1%E6%BB%A1%E7%9A%84%E7%A7%8B%E5%8F%B6%E5%8E%9F%E4%B9%8B%E6%97%85.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=2172083&cid=3379749"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
+
+<blockquote>
+<p>投稿日期：2015-04-03 09:16:06<br>简介：自制 在去年记录了日本的四季之后（虽然冬季篇还在坑着。。）今年打算尝试做一些具体到各个圣地的音乐视频。 作为一名宅，第一个为大家展现的果断是秋叶原。 考虑到秋叶原相关的视频比较多，于是根据现有的所有内容，仔细统计了这些作品中最少出现的地点，然后规划了路线，再通过一些梗，还有一些经典场景的重现，尝试从并不浮于“二次元”表面的角度来为大家展示这个圣地。 里面的梗和圣地大家能认出多少？</p>
+</blockquote>
+<a class="btn-beautify pink larger" href="https://www.bilibili.com/video/BV1As411D7Zq/" title="bilibili观看"><i class="fab fa-bilibili"></i><span>bilibili观看</span></a>
+
+<a class="btn-beautify blue larger" href="https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E8%8A%82%E6%93%8D%E6%BB%A1%E6%BB%A1%E7%9A%84%E7%A7%8B%E5%8F%B6%E5%8E%9F%E4%B9%8B%E6%97%85.mp4" title="下载"><i class="fas fa-download"></i><span>下载</span></a>
 ]]></content>
   </entry>
   <entry>
@@ -1183,23 +1180,9 @@
 ]]></content>
   </entry>
   <entry>
-    <title>这应该是一年中最有童话气息的小樽？</title>
-    <url>/video/426_video/%E8%BF%99%E5%BA%94%E8%AF%A5%E6%98%AF%E4%B8%80%E5%B9%B4%E4%B8%AD%E6%9C%80%E6%9C%89%E7%AB%A5%E8%AF%9D%E6%B0%94%E6%81%AF%E7%9A%84%E5%B0%8F%E6%A8%BD%EF%BC%9F/index.html</url>
-    <content><![CDATA[<div id="dplayer28" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer28"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E8%BF%99%E5%BA%94%E8%AF%A5%E6%98%AF%E4%B8%80%E5%B9%B4%E4%B8%AD%E6%9C%80%E6%9C%89%E7%AB%A5%E8%AF%9D%E6%B0%94%E6%81%AF%E7%9A%84%E5%B0%8F%E6%A8%BD%EF%BC%9F.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=20224273&cid=33021639"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
-
-<blockquote>
-<p>投稿日期：2018-03-01 18:07:44<br>简介：元旦直播小樽的时候曾经吐槽过那个时候的雪不够大，灯也不够多，于是我们在春节那天重新来到了小樽，然后我们几个大老爷们都突然起了少女心。</p>
-</blockquote>
-<a class="btn-beautify pink larger" href="https://www.bilibili.com/video/BV1RW411s7EE/" title="bilibili观看"><i class="fab fa-bilibili"></i><span>bilibili观看</span></a>
-
-<a class="btn-beautify blue larger" href="https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E8%BF%99%E5%BA%94%E8%AF%A5%E6%98%AF%E4%B8%80%E5%B9%B4%E4%B8%AD%E6%9C%80%E6%9C%89%E7%AB%A5%E8%AF%9D%E6%B0%94%E6%81%AF%E7%9A%84%E5%B0%8F%E6%A8%BD%EF%BC%9F.mp4" title="下载"><i class="fas fa-download"></i><span>下载</span></a>
-
-]]></content>
-  </entry>
-  <entry>
     <title>重游阿苏，人是物非</title>
     <url>/video/426_video/%E9%87%8D%E6%B8%B8%E9%98%BF%E8%8B%8F%EF%BC%8C%E4%BA%BA%E6%98%AF%E7%89%A9%E9%9D%9E/index.html</url>
-    <content><![CDATA[<div id="dplayer29" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer29"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E9%87%8D%E6%B8%B8%E9%98%BF%E8%8B%8F%EF%BC%8C%E4%BA%BA%E6%98%AF%E7%89%A9%E9%9D%9E/%E9%87%8D%E6%B8%B8%E9%98%BF%E8%8B%8F%EF%BC%8C%E4%BA%BA%E6%98%AF%E7%89%A9%E9%9D%9E.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=15458592&cid=25158130"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
+    <content><![CDATA[<div id="dplayer28" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer28"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E9%87%8D%E6%B8%B8%E9%98%BF%E8%8B%8F%EF%BC%8C%E4%BA%BA%E6%98%AF%E7%89%A9%E9%9D%9E/%E9%87%8D%E6%B8%B8%E9%98%BF%E8%8B%8F%EF%BC%8C%E4%BA%BA%E6%98%AF%E7%89%A9%E9%9D%9E.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=15458592&cid=25158130"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
 
 <blockquote>
 <p>投稿日期：2017-10-16 20:04:44<br>简介：去阿苏第一天的户外直播录像赶紧剪出来了。 接收户外直播通知大家可以关注微博 @guanyuhan426，微信 PC426，或者斗鱼2135直播间。 阿苏在上次难忘的露营后，就一直想要再来一次，10.1期间终于实现了，可惜两年过去，曾经看到的景色已经发生了变化，甚至看不到了。 很庆幸每一次旅程都有认真记录和分享，这些作品成为了难忘的历史。</p>
@@ -1212,7 +1195,7 @@
   <entry>
     <title>长崎漫步</title>
     <url>/video/426_video/%E9%95%BF%E5%B4%8E%E6%BC%AB%E6%AD%A5/index.html</url>
-    <content><![CDATA[<div id="dplayer30" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer30"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%5B%E9%95%BF%E5%B4%8E%E6%BC%AB%E6%AD%A5%5D%204k%20www.pc426.com.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=7057751&cid=11506571"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
+    <content><![CDATA[<div id="dplayer29" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer29"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%5B%E9%95%BF%E5%B4%8E%E6%BC%AB%E6%AD%A5%5D%204k%20www.pc426.com.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=7057751&cid=11506571"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
 
 <blockquote>
 <p>投稿日期：2016-11-12 00:25:18<br>简介：长崎是一座建在山上的城市，特殊的地形不仅让它成为了世界三大夜景之一，还让它很适合在城市里悠闲的爬山看风景。 军舰岛之后的第二天，我们整天都在长崎市内漫步，不仅找到了很多建在寺院里的幼儿园（雾），很多每天爬山送快递的快递员，很多可爱的喵，看到了美丽的长崎夜景，还在晚间遇到了热情的长崎人，居然直接带我们去了他们自己开的酒吧，请我们在酒吧的烛光下吃了长崎的和牛。 这一天的记忆清新，怀旧，还有不少小惊喜，在这样的氛围里我也破了我的连续直播记录——10小时，感谢那一天大家的陪伴，好久没有这么放松了。</p>
@@ -1220,6 +1203,20 @@
 <a class="btn-beautify pink larger" href="https://www.bilibili.com/video/BV1ys411x7iC/" title="bilibili观看"><i class="fab fa-bilibili"></i><span>bilibili观看</span></a>
 
 <a class="btn-beautify blue larger" href="https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%5B%E9%95%BF%E5%B4%8E%E6%BC%AB%E6%AD%A5%5D%204k%20www.pc426.com.mp4" title="下载"><i class="fas fa-download"></i><span>下载</span></a>
+]]></content>
+  </entry>
+  <entry>
+    <title>这应该是一年中最有童话气息的小樽？</title>
+    <url>/video/426_video/%E8%BF%99%E5%BA%94%E8%AF%A5%E6%98%AF%E4%B8%80%E5%B9%B4%E4%B8%AD%E6%9C%80%E6%9C%89%E7%AB%A5%E8%AF%9D%E6%B0%94%E6%81%AF%E7%9A%84%E5%B0%8F%E6%A8%BD%EF%BC%9F/index.html</url>
+    <content><![CDATA[<div id="dplayer30" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer30"),"screenshot":"yes","video":{"url":"https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E8%BF%99%E5%BA%94%E8%AF%A5%E6%98%AF%E4%B8%80%E5%B9%B4%E4%B8%AD%E6%9C%80%E6%9C%89%E7%AB%A5%E8%AF%9D%E6%B0%94%E6%81%AF%E7%9A%84%E5%B0%8F%E6%A8%BD%EF%BC%9F.mp4"},"danmaku":{"api":"https://dplayer.mitsumune.top/","addition":["https://dplayer.mitsumune.top/v3/bilibili?aid=20224273&cid=33021639"]}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
+
+<blockquote>
+<p>投稿日期：2018-03-01 18:07:44<br>简介：元旦直播小樽的时候曾经吐槽过那个时候的雪不够大，灯也不够多，于是我们在春节那天重新来到了小樽，然后我们几个大老爷们都突然起了少女心。</p>
+</blockquote>
+<a class="btn-beautify pink larger" href="https://www.bilibili.com/video/BV1RW411s7EE/" title="bilibili观看"><i class="fab fa-bilibili"></i><span>bilibili观看</span></a>
+
+<a class="btn-beautify blue larger" href="https://pan.mitsumune.top/d/OneDrive/guanyuhan426%E4%BD%9C%E5%93%81/%E8%A7%86%E9%A2%91/%E8%BF%99%E5%BA%94%E8%AF%A5%E6%98%AF%E4%B8%80%E5%B9%B4%E4%B8%AD%E6%9C%80%E6%9C%89%E7%AB%A5%E8%AF%9D%E6%B0%94%E6%81%AF%E7%9A%84%E5%B0%8F%E6%A8%BD%EF%BC%9F.mp4" title="下载"><i class="fas fa-download"></i><span>下载</span></a>
+
 ]]></content>
   </entry>
 </search>
